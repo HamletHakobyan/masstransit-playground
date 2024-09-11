@@ -1,7 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Playground.Persistence;
-using Playground.Persistence.Entities;
 
 namespace Playground;
 

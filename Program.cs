@@ -1,11 +1,7 @@
 ﻿using MassTransit;
-using MassTransit.Configuration;
-using Microsoft.Data.Sqlite;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Playground;
-using Playground.Persistence;
 using Serilog;
 using Serilog.Settings.Configuration;
 
@@ -40,8 +36,10 @@ static void ConfigureMassTransit(IServiceCollection services, HostBuilderContext
         x.AddConsumer<PrioritizedMessageConsumer>();
         
         x.UsingAmazonSqs(
-            (ctx, configurator) =>
+            (registrationContext, configurator) =>
             {
+                configurator.LocalstackHost();
+
                 configurator.MessageTopology.SetEntityNameFormatter(formatter);
 
                 var topicName = configurator.MessageTopology.EntityNameFormatter.FormatEntityName<PrioritizedMessage>();
@@ -49,11 +47,11 @@ static void ConfigureMassTransit(IServiceCollection services, HostBuilderContext
                 string[] priorities = ["standard", "low", "high"];
                 foreach (var priority in priorities)
                 {
-                    var queueName = $"{ctx.EndpointNameFormatter.Consumer<PrioritizedMessageConsumer>()}-{priority}";
+                    var queueName =
+                        $"{registrationContext.EndpointNameFormatter.Consumer<PrioritizedMessageConsumer>()}-{priority}";
                     configurator.ReceiveEndpoint(queueName,
                         configEndpoint =>
                         {
-                            configEndpoint.ConfigureConsumeTopology = false;
                             configEndpoint.Subscribe(topicName,
                                 subscriptionConfigurator =>
                                 {
@@ -61,47 +59,13 @@ static void ConfigureMassTransit(IServiceCollection services, HostBuilderContext
                                         $"{{\"message\": {{\"priority\": [\"{priority}\"]}}}}";
                                     subscriptionConfigurator.TopicSubscriptionAttributes["FilterPolicyScope"] = "MessageBody";
                                 });
+                            
+                            configEndpoint.ConfigureConsumer<PrioritizedMessageConsumer>(registrationContext);
                         });
                     
                 }
 
-                configurator.LocalstackHost();
-                configurator.ConfigureEndpoints(ctx);
+                configurator.ConfigureEndpoints(registrationContext);
             });
     });
-}
-
-public class KebabCaseFormatter :
-    KebabCaseEndpointNameFormatter,
-    IEntityNameFormatter
-{
-    private readonly string _topicSuffix;
-    private readonly string _queueSuffix;
-
-    public KebabCaseFormatter(
-        string prefix,
-        string topicSuffix = "topic",
-        string queueSuffix = "queue",
-        bool includeNamespace = false) :
-        base(prefix, includeNamespace)
-    {
-        _topicSuffix = topicSuffix;
-        _queueSuffix = queueSuffix;
-    }
-
-    public string FormatEntityName<T>()
-    {
-        var messageName = GetMessageName(typeof(T));
-        return string.IsNullOrWhiteSpace(_topicSuffix)
-            ? messageName
-            : $"{messageName}-{_topicSuffix}";
-    }
-
-    public override string Consumer<T>()
-    {
-        var consumerName = base.Consumer<T>();
-        return string.IsNullOrWhiteSpace(_queueSuffix)
-                ? consumerName
-            : $"{consumerName}-{_queueSuffix}";
-    }
 }

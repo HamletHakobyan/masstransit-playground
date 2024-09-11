@@ -1,7 +1,5 @@
 ﻿using MassTransit;
 using Microsoft.Extensions.Logging;
-using Playground.Persistence;
-using Playground.Persistence.Entities;
 
 namespace Playground;
 
