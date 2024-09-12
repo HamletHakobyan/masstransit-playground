@@ -1,7 +1,8 @@
-﻿using MassTransit;
+﻿using Contracts;
+using MassTransit;
 using Microsoft.Extensions.Logging;
 
-namespace Playground;
+namespace Producer;
 
 public class ScopedWorkerService : IScopedWorkerService
 {
@@ -24,7 +25,7 @@ public class ScopedWorkerService : IScopedWorkerService
         {
             await Task.Delay(2000, stoppingToken);
             await sendEndpoint.Send<ImportantPrioritizedMessage>(new { Name = "important message" }, stoppingToken);
-            await sendEndpoint.Send<StandardPrioritizedMessage>(new { Name = "standard message name" }, stoppingToken);
+            await sendEndpoint.Send<StandardPrioritizedMessage>(new { Name = "standard message" }, stoppingToken);
         }
     }
 }

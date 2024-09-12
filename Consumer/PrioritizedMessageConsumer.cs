@@ -1,7 +1,8 @@
-﻿using MassTransit;
+﻿using Contracts;
+using MassTransit;
 using Microsoft.Extensions.Logging;
 
-namespace Playground;
+namespace Consumer;
 
 public class PrioritizedMessageConsumer(
     ILogger<PrioritizedMessageConsumer> logger)

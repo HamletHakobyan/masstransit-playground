@@ -1,9 +1,8 @@
-﻿using System.Reflection;
+﻿using Common;
+using Consumer;
 using MassTransit;
-using MassTransit.AmazonSqsTransport.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Playground;
 using Serilog;
 using Serilog.Settings.Configuration;
 
@@ -11,9 +10,6 @@ await Host.CreateDefaultBuilder(args)
     .ConfigureServices((context, services) =>
     {
         ConfigureMassTransit(services, context);
-
-        services.AddHostedService<WorkerService>();
-        services.AddScoped<IScopedWorkerService, ScopedWorkerService>();
     })
     .UseSerilog((context, configuration) =>
     {
@@ -30,32 +26,19 @@ static void ConfigureMassTransit(IServiceCollection services, HostBuilderContext
     services.AddMassTransit(x =>
     {
         var formatter = new KebabCaseFormatter(
-            $"{context.HostingEnvironment.EnvironmentName.ToLower()}",
+            context.HostingEnvironment.EnvironmentName.ToLower(),
             includeNamespace: true);
         
         x.SetEndpointNameFormatter(formatter);
         
-        x.AddConsumer<PrioritizedMessageConsumer>();
+        x.AddConsumer<PrioritizedMessageConsumer>()
+            .Endpoint(configurator => configurator.Name = "development-contracts-prioritized-message-queue");
         
         x.UsingAmazonSqs(
             (registrationContext, configurator) =>
             {
                 configurator.LocalstackHost();
 
-                configurator.MessageTopology.SetEntityNameFormatter(formatter);
-
-                var topicName = configurator.MessageTopology.GetMessageTopology<PrioritizedMessage>().EntityName;
-                var queueName = registrationContext.EndpointNameFormatter.Consumer<PrioritizedMessageConsumer>();
-                
-                configurator.ReceiveEndpoint(queueName,
-                    configEndpoint =>
-                    {
-                        configEndpoint.ConfigureConsumer<PrioritizedMessageConsumer>(registrationContext);
-                        
-                        configEndpoint.Subscribe(topicName);
-
-                        configEndpoint.ConfigureConsumeTopology = false;
-                    });
                 configurator.ConfigureEndpoints(registrationContext);
             });
     });

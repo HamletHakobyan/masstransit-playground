@@ -1,5 +1,7 @@
 ﻿using MassTransit;
 
+namespace Common;
+
 public class KebabCaseFormatter :
     KebabCaseEndpointNameFormatter,
     IEntityNameFormatter
