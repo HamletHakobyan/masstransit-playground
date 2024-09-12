@@ -1,4 +1,6 @@
-﻿using MassTransit;
+﻿using System.Reflection;
+using MassTransit;
+using MassTransit.AmazonSqsTransport.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Playground;
@@ -42,29 +44,22 @@ static void ConfigureMassTransit(IServiceCollection services, HostBuilderContext
 
                 configurator.MessageTopology.SetEntityNameFormatter(formatter);
 
-                var topicName = configurator.MessageTopology.EntityNameFormatter.FormatEntityName<PrioritizedMessage>();
+                var topicName = configurator.MessageTopology.GetMessageTopology<PrioritizedMessage>().EntityName;
+                var queueName = registrationContext.EndpointNameFormatter.Consumer<PrioritizedMessageConsumer>();
                 
-                string[] priorities = ["standard", "low", "high"];
-                foreach (var priority in priorities)
-                {
-                    var queueName =
-                        $"{registrationContext.EndpointNameFormatter.Consumer<PrioritizedMessageConsumer>()}-{priority}";
-                    configurator.ReceiveEndpoint(queueName,
-                        configEndpoint =>
+                configurator.ReceiveEndpoint(queueName,
+                    configEndpoint =>
+                    {
+                        configEndpoint.ConfigureConsumer<PrioritizedMessageConsumer>(registrationContext, consumer =>
                         {
-                            configEndpoint.Subscribe(topicName,
-                                subscriptionConfigurator =>
-                                {
-                                    subscriptionConfigurator.TopicSubscriptionAttributes["FilterPolicy"] =
-                                        $"{{\"message\": {{\"priority\": [\"{priority}\"]}}}}";
-                                    subscriptionConfigurator.TopicSubscriptionAttributes["FilterPolicyScope"] = "MessageBody";
-                                });
-                            
-                            configEndpoint.ConfigureConsumer<PrioritizedMessageConsumer>(registrationContext);
+                            consumer.ConsumerMessage<ImportantPrioritizedMessage>();
+                            consumer.ConsumerMessage<StandardPrioritizedMessage>();
                         });
-                    
-                }
+                        
+                        configEndpoint.Subscribe(topicName);
 
+                        configEndpoint.ConfigureConsumeTopology = false;
+                    });
                 configurator.ConfigureEndpoints(registrationContext);
             });
     });

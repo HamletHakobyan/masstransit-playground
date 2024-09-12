@@ -9,7 +9,6 @@ public sealed class WorkerService(IServiceProvider serviceProvider) : Background
     {
         await using var scope = serviceProvider.CreateAsyncScope();
         var scopedWorkerService = scope.ServiceProvider.GetRequiredService<IScopedWorkerService>();
-        
         await scopedWorkerService.ExecuteAsync(stoppingToken);
     }
 }

@@ -19,8 +19,13 @@ public class ScopedWorkerService : IScopedWorkerService
     {
         var sendEndpoint =
             await _bus.GetPublishSendEndpoint<PrioritizedMessage>();
-        await sendEndpoint.Send<PrioritizedMessage>(new("SomeName", "standard"), stoppingToken);
-        await sendEndpoint.Send<PrioritizedMessage>(new("someOtherName", "high"), stoppingToken);
+        
+        while (!stoppingToken.IsCancellationRequested)
+        {
+            await Task.Delay(2000, stoppingToken);
+            await sendEndpoint.Send<ImportantPrioritizedMessage>(new { Name = "important message" }, stoppingToken);
+            await sendEndpoint.Send<StandardPrioritizedMessage>(new { Name = "standard message name" }, stoppingToken);
+        }
     }
 }
 

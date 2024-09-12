@@ -3,23 +3,24 @@ using Microsoft.Extensions.Logging;
 
 namespace Playground;
 
-public class PrioritizedMessageConsumer(ILogger<PrioritizedMessageConsumer> logger)
-    : IConsumer<PrioritizedMessage>
+public class PrioritizedMessageConsumer(
+    ILogger<PrioritizedMessageConsumer> logger)
+    : IConsumer<ImportantPrioritizedMessage>,
+        IConsumer<StandardPrioritizedMessage>
 {
-    public Task Consume(ConsumeContext<PrioritizedMessage> context)
+    public Task Consume(ConsumeContext<ImportantPrioritizedMessage> context)
     {
         // if (context.Message.Name == "HamletHakobyan")
         // {
         //     throw new Exception("Exception thrown");
         // }
-        logger.LogInformation("PrioritizedMessageConsumer: {message}", context.Message.Name);
+        logger.LogInformation("ImportantPrioritizedMessageConsumer: {message}", context.Message.Name);
         return Task.CompletedTask;
     }
-}
 
-public class PrioritizedMessageDefinition : ConsumerDefinition<PrioritizedMessageConsumer>
-{
-    public PrioritizedMessageDefinition()
+    public Task Consume(ConsumeContext<StandardPrioritizedMessage> context)
     {
+        logger.LogInformation("StandardPrioritizedMessageConsumer: {message}", context.Message.Name);
+        return Task.CompletedTask;
     }
 }

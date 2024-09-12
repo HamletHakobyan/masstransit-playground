@@ -3,7 +3,4 @@
 namespace Playground;
 
 // [ExcludeFromTopology]
-public interface PrioritizedMessage
-{
-    public string Name { get; }
-}
+public interface StandardPrioritizedMessage : PrioritizedMessage;
