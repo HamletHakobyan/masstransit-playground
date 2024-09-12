@@ -50,11 +50,7 @@ static void ConfigureMassTransit(IServiceCollection services, HostBuilderContext
                 configurator.ReceiveEndpoint(queueName,
                     configEndpoint =>
                     {
-                        configEndpoint.ConfigureConsumer<PrioritizedMessageConsumer>(registrationContext, consumer =>
-                        {
-                            consumer.ConsumerMessage<ImportantPrioritizedMessage>();
-                            consumer.ConsumerMessage<StandardPrioritizedMessage>();
-                        });
+                        configEndpoint.ConfigureConsumer<PrioritizedMessageConsumer>(registrationContext);
                         
                         configEndpoint.Subscribe(topicName);
 
