@@ -1,6 +1,7 @@
 ﻿using System.Reflection;
 using MassTransit;
 using MassTransit.AmazonSqsTransport.Configuration;
+using MassTransit.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Playground;
@@ -44,16 +45,15 @@ static void ConfigureMassTransit(IServiceCollection services, HostBuilderContext
 
                 configurator.MessageTopology.SetEntityNameFormatter(formatter);
 
-                var topicName = configurator.MessageTopology.GetMessageTopology<PrioritizedMessage>().EntityName;
-                var queueName = registrationContext.EndpointNameFormatter.Consumer<PrioritizedMessageConsumer>();
-                
-                configurator.ReceiveEndpoint(queueName,
+                configurator.ReceiveEndpoint(new ConsumerEndpointDefinition<PrioritizedMessageConsumer>(
+                        new EndpointSettings<IEndpointDefinition<PrioritizedMessageConsumer>>()),
+                    registrationContext.EndpointNameFormatter,
                     configEndpoint =>
                     {
                         configEndpoint.ConfigureConsumer<PrioritizedMessageConsumer>(registrationContext);
                         
-                        configEndpoint.Subscribe(topicName);
-
+                        configEndpoint.Subscribe<PrioritizedMessage>();
+                        
                         configEndpoint.ConfigureConsumeTopology = false;
                     });
                 configurator.ConfigureEndpoints(registrationContext);
