@@ -1,4 +1,5 @@
 ﻿using MassTransit;
+using MassTransit.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Playground;
@@ -42,8 +43,6 @@ static void ConfigureMassTransit(IServiceCollection services, HostBuilderContext
 
                 configurator.MessageTopology.SetEntityNameFormatter(formatter);
 
-                var topicName = configurator.MessageTopology.EntityNameFormatter.FormatEntityName<PrioritizedMessage>();
-                
                 string[] priorities = ["standard", "low", "high"];
                 foreach (var priority in priorities)
                 {
@@ -52,7 +51,7 @@ static void ConfigureMassTransit(IServiceCollection services, HostBuilderContext
                     configurator.ReceiveEndpoint(queueName,
                         configEndpoint =>
                         {
-                            configEndpoint.Subscribe(topicName,
+                            configEndpoint.Subscribe<PrioritizedMessage>(
                                 subscriptionConfigurator =>
                                 {
                                     subscriptionConfigurator.TopicSubscriptionAttributes["FilterPolicy"] =
@@ -61,6 +60,8 @@ static void ConfigureMassTransit(IServiceCollection services, HostBuilderContext
                                 });
                             
                             configEndpoint.ConfigureConsumer<PrioritizedMessageConsumer>(registrationContext);
+
+                            configEndpoint.ConfigureConsumeTopology = false;
                         });
                     
                 }
