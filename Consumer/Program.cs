@@ -28,12 +28,16 @@ static void ConfigureMassTransit(IServiceCollection services, HostBuilderContext
         var formatter = new KebabCaseFormatter(
             context.HostingEnvironment.EnvironmentName.ToLower(),
             includeNamespace: true);
-        
+
         x.SetEndpointNameFormatter(formatter);
-        
+
         x.AddConsumer<PrioritizedMessageConsumer>()
-            .Endpoint(configurator => configurator.Name = "development-contracts-prioritized-message-queue");
-        
+            .Endpoint(configurator =>
+            {
+                configurator.Name = Endpoints.PrioritizedMessageName;
+                configurator.ConfigureConsumeTopology = false;
+            });
+
         x.UsingAmazonSqs(
             (registrationContext, configurator) =>
             {

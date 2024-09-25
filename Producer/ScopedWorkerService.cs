@@ -1,6 +1,6 @@
-﻿using Contracts;
-using MassTransit;
+﻿using MassTransit;
 using Microsoft.Extensions.Logging;
+using Zema.Contracts;
 
 namespace Producer;
 
@@ -21,12 +21,12 @@ public class ScopedWorkerService : IScopedWorkerService
         var sendEndpoint =
             await _bus.GetPublishSendEndpoint<PrioritizedMessage>();
         
-        while (!stoppingToken.IsCancellationRequested)
-        {
-            await Task.Delay(2000, stoppingToken);
+        // while (!stoppingToken.IsCancellationRequested)
+        // {
+            await Task.Delay(5000, stoppingToken);
             await sendEndpoint.Send<ImportantPrioritizedMessage>(new { Name = "important message" }, stoppingToken);
             await sendEndpoint.Send<StandardPrioritizedMessage>(new { Name = "standard message" }, stoppingToken);
-        }
+        // }
     }
 }
 

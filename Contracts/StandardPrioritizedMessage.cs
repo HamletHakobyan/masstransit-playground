@@ -1,3 +1,3 @@
-﻿namespace Contracts;
+﻿namespace Zema.Contracts;
 
 public interface StandardPrioritizedMessage : PrioritizedMessage;

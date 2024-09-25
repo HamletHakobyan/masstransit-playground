@@ -1,6 +1,6 @@
-﻿using Contracts;
-using MassTransit;
+﻿using MassTransit;
 using Microsoft.Extensions.Logging;
+using Zema.Contracts;
 
 namespace Consumer;
 

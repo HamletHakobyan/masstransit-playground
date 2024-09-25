@@ -1,4 +1,4 @@
-﻿namespace Contracts;
+﻿namespace Zema.Contracts;
 
 public interface PrioritizedMessage
 {

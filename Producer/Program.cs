@@ -1,11 +1,11 @@
 ﻿using Common;
-using Contracts;
 using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Producer;
 using Serilog;
 using Serilog.Settings.Configuration;
+using Zema.Contracts;
 
 await Host.CreateDefaultBuilder(args)
     .ConfigureServices((context, services) =>
@@ -32,7 +32,6 @@ static void ConfigureMassTransit(IServiceCollection services, HostBuilderContext
         var formatter = new KebabCaseFormatter(
             context.HostingEnvironment.EnvironmentName.ToLower(),
             includeNamespace: true);
-        
         x.SetEndpointNameFormatter(formatter);
         
         // x.AddConsumer<PrioritizedMessageConsumer>();
@@ -45,13 +44,10 @@ static void ConfigureMassTransit(IServiceCollection services, HostBuilderContext
                 configurator.MessageTopology.SetEntityNameFormatter(formatter);
 
                 var topicName = configurator.MessageTopology.GetMessageTopology<PrioritizedMessage>().EntityName;
-                // var queueName = registrationContext.EndpointNameFormatter.Consumer<PrioritizedMessageConsumer>();
-                var queueName = "development-contracts-prioritized-message-queue";
+                var queueName = Endpoints.PrioritizedMessageName;
                 configurator.ReceiveEndpoint(queueName,
                     configEndpoint =>
                     {
-                        // configEndpoint.ConfigureConsumer<PrioritizedMessageConsumer>(registrationContext);
-                        
                         configEndpoint.Subscribe(topicName);
 
                         configEndpoint.ConfigureConsumeTopology = false;
