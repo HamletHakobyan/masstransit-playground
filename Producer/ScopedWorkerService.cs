@@ -1,6 +1,7 @@
 ﻿using MassTransit;
 using Microsoft.Extensions.Logging;
 using Zema.Contracts;
+using Zema.IntegrationMessages;
 
 namespace Producer;
 
@@ -18,14 +19,17 @@ public class ScopedWorkerService : IScopedWorkerService
     }
     public async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        var sendEndpoint =
-            await _bus.GetPublishSendEndpoint<PrioritizedMessage>();
-        
+        var emailNotificationPrepared = new EmailNotificationPrepared(
+            Guid.NewGuid(),
+            "high",
+            "unknown@loinloads.com",
+            "test body",
+            "test subject",
+            new List<StorageFile>());
         // while (!stoppingToken.IsCancellationRequested)
         // {
             await Task.Delay(5000, stoppingToken);
-            await sendEndpoint.Send<ImportantPrioritizedMessage>(new { Name = "important message" }, stoppingToken);
-            await sendEndpoint.Send<StandardPrioritizedMessage>(new { Name = "standard message" }, stoppingToken);
+            await _bus.Publish(emailNotificationPrepared, stoppingToken);
         // }
     }
 }

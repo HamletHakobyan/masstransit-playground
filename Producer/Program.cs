@@ -6,11 +6,13 @@ using Producer;
 using Serilog;
 using Serilog.Settings.Configuration;
 using Zema.Contracts;
+using Zema.IntegrationMessages;
 
 await Host.CreateDefaultBuilder(args)
     .ConfigureServices((context, services) =>
     {
         ConfigureMassTransit(services, context);
+        services.Configure<AmazonSqsTransportOptions>(context.Configuration.GetSection("AWS"));
 
         services.AddHostedService<WorkerService>();
         services.AddScoped<IScopedWorkerService, ScopedWorkerService>();
@@ -33,9 +35,8 @@ static void ConfigureMassTransit(IServiceCollection services, HostBuilderContext
             context.HostingEnvironment.EnvironmentName.ToLower(),
             includeNamespace: true);
         x.SetEndpointNameFormatter(formatter);
-        
+
         // x.AddConsumer<PrioritizedMessageConsumer>();
-        
         x.UsingAmazonSqs(
             (registrationContext, configurator) =>
             {
@@ -43,17 +44,20 @@ static void ConfigureMassTransit(IServiceCollection services, HostBuilderContext
 
                 configurator.MessageTopology.SetEntityNameFormatter(formatter);
 
-                var topicName = configurator.MessageTopology.GetMessageTopology<PrioritizedMessage>().EntityName;
-                var queueName = Endpoints.PrioritizedMessageName;
-                configurator.ReceiveEndpoint(queueName,
-                    configEndpoint =>
-                    {
-                        configEndpoint.Subscribe(topicName);
+                // var topicName = configurator.MessageTopology.GetMessageTopology<PrioritizedMessage>().EntityName;
+                // var queueName = Endpoints.PrioritizedMessageName;
+                // configurator.ReceiveEndpoint(queueName,
+                //     configEndpoint =>
+                //     {
+                //         configEndpoint.Subscribe(topicName);
+                //
+                //         configEndpoint.ConfigureConsumeTopology = false;
+                //     });
+                // configurator.ConfigureEndpoints(registrationContext);
+                // configurator.DeployTopologyOnly = true;
 
-                        configEndpoint.ConfigureConsumeTopology = false;
-                    });
-                configurator.ConfigureEndpoints(registrationContext);
-                configurator.DeployTopologyOnly = true;
+                configurator.Publish<EmailNotificationPrepared>(
+                    r => r.Exclude = true);
             });
     });
 }
