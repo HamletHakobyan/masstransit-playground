@@ -33,9 +33,9 @@ static void ConfigureMassTransit(IServiceCollection services, HostBuilderContext
             context.HostingEnvironment.EnvironmentName.ToLower(),
             includeNamespace: true);
         x.SetEndpointNameFormatter(formatter);
-        
+
         // x.AddConsumer<PrioritizedMessageConsumer>();
-        
+
         x.UsingAmazonSqs(
             (registrationContext, configurator) =>
             {
@@ -54,6 +54,7 @@ static void ConfigureMassTransit(IServiceCollection services, HostBuilderContext
                     });
                 configurator.ConfigureEndpoints(registrationContext);
                 configurator.DeployTopologyOnly = true;
+                // configurator.Publish<PrioritizedMessage>(p => p.Exclude = true);
             });
     });
 }
