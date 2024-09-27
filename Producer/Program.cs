@@ -12,7 +12,6 @@ await Host.CreateDefaultBuilder(args)
     .ConfigureServices((context, services) =>
     {
         ConfigureMassTransit(services, context);
-        services.Configure<AmazonSqsTransportOptions>(context.Configuration.GetSection("AWS"));
 
         services.AddHostedService<WorkerService>();
         services.AddScoped<IScopedWorkerService, ScopedWorkerService>();
@@ -37,6 +36,7 @@ static void ConfigureMassTransit(IServiceCollection services, HostBuilderContext
         x.SetEndpointNameFormatter(formatter);
 
         // x.AddConsumer<PrioritizedMessageConsumer>();
+
         x.UsingAmazonSqs(
             (registrationContext, configurator) =>
             {

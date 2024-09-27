@@ -23,6 +23,7 @@ await Host.CreateDefaultBuilder(args)
 
 static void ConfigureMassTransit(IServiceCollection services, HostBuilderContext context)
 {
+    services.Configure<AmazonSqsTransportOptions>(context.Configuration.GetSection("AWS"));
     services.AddMassTransit(x =>
     {
         var formatter = new KebabCaseFormatter(
@@ -31,7 +32,7 @@ static void ConfigureMassTransit(IServiceCollection services, HostBuilderContext
 
         x.SetEndpointNameFormatter(formatter);
 
-        x.AddConsumer<PrioritizedMessageConsumer>()
+        x.AddConsumer<NotificationStateChangedConsumer>()
             .Endpoint(configurator =>
             {
                 configurator.Name = Endpoints.PrioritizedMessageName;
